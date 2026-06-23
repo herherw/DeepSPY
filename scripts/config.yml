@@ -1,0 +1,34 @@
+# 数据相关配置
+data:
+  datasetname: /mnt/data2/model/SIR/data/total
+  pair_path: /home/wuhe/model/SIR/data/total/pair_1.txt
+  pro1_seq_path: /mnt/data2/model/SIR/data/total/pro1_seq_0.csv
+  pro1_aac_path: /mnt/data2/model/SIR/data/total/pro1_aac.npz
+  pro1_dipeptide_path: /mnt/data2/model/SIR/data/total/pro1_dipeptide.npz
+  pro1_esmc_path: /mnt/data2/model/SIR/data/total/pro1_esmc.npy
+  pro1_ckesmc_path: /mnt/data2/model/SIR/data/total/pro1_ckesmc.npy
+  pro2_seq_path: /mnt/data2/model/SIR/data/total/pro2_seq_0.csv
+  pro2_aac_path: /mnt/data2/model/SIR/data/total/pro2_aac.npz
+  pro2_dipeptide_path: /mnt/data2/model/SIR/data/total/pro2_dipeptide.npz
+  pro2_esmc_path: /mnt/data2/model/SIR/data/total/pro2_esmc.npy
+  pro2_ckesmc_path: /mnt/data2/model/SIR/data/total/pro2_ckesmc.npy
+# 训练相关配置
+train:
+  epoch: 50
+  batchsize: 37
+  lr: 0.000005
+  patience: 25
+  contrastive_loss_coef: 2.0
+  consistency_loss_coef: 10.0
+  seed: 123
+  threshold: 0.5
+# 模型相关配置
+model:
+  embed_hid_dim: 128
+  embedding_size: 4800
+  dropout: 0.2
+
+# 输出相关配置 
+output:
+  draw_curves: True
+  model_save_dir: /mnt/data2/model/SIR/results
