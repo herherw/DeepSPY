@@ -36,22 +36,22 @@ class AttentionModule(nn.Module):
 
         batch_size, seq_len, esmc_dim = x.size()
         
-        # 计算自注意力
+        
         q = self.query(x) 
         k = self.key(x)   
         v = self.value(x)  
         
-        # 计算注意力分数
+        
         scores = torch.matmul(q, k.transpose(-2, -1)) / (esmc_dim ** 0.5)  
 
-        # 应用掩码
+        
         if mask is not None:
             scores = scores.masked_fill(mask, -1e9)
         
         attn = F.softmax(scores, dim=-1)
         attn = self.dropout(attn)
         
-        # 计算加权特征
+        
         context = torch.matmul(attn, v)  
         return context, attn
 
@@ -159,7 +159,7 @@ class Model(nn.Module):
         seq2_proj = self.projector(seq2_embed)
         dist = F.cosine_similarity(seq1_proj, seq2_proj, dim=-1)
         
-        fusion_vector = combined_features.detach().cpu().numpy()  # 转为 NumPy 数组
+        fusion_vector = combined_features.detach().cpu().numpy() 
     
         attention_weights = {}
         residue_scores = [None, None]
