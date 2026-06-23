@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#train.py
+# train.py
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
@@ -75,12 +75,12 @@ def predicting(model, loader, save_path=None, threshold=0.5, fusion_save_path=No
     total_cross_attn = [attn for batch in total_cross_attn for attn in batch]
 
 
-    if fusion_save_path:  # 检查 fusion_save_path 是否为 None
+    if fusion_save_path:  # Check if fusion_save_path is None
         total_fusion_vectors = np.concatenate(total_fusion_vectors, axis=0)  
         fusion_file = fusion_save_path.replace("{dataset_type}", dataset_type)
         np.save(fusion_file, total_fusion_vectors)
     
-    if labels_save_path:  # 检查 labels_save_path 是否为 None
+    if labels_save_path:  # Check if labels_save_path is None
         labels_file = labels_save_path.replace("{dataset_type}", dataset_type)
         np.save(labels_file, total_labels.cpu().numpy())
         
@@ -105,7 +105,7 @@ def predicting(model, loader, save_path=None, threshold=0.5, fusion_save_path=No
     )
 
 def train(train_args, nn, test_loader, result_dir, threshold=0.5):
-    """训练模型"""
+    """Train the model"""
     train_losses = []
     train_bce_losses = []
     train_contrastive_losses = []
@@ -216,7 +216,7 @@ def train(train_args, nn, test_loader, result_dir, threshold=0.5):
                 best_val_preds = total_preds
                 best_val_labels = total_labels
 
-                # 保存模型
+                # Save model
                 model_save_path = os.path.join(result_dir, f"fold_{nn}_best_model.pkl")
                 torch.save({
                     'model_state_dict': attention_model.state_dict(),
@@ -379,17 +379,17 @@ def evaluate_key_residues(model_path, test_loader, result_dir, fold_idx, thresho
 
 
 def save_fold_data(save_dir, train_pairs, test_pairs):
-    """保存每个fold的数据到指定目录"""
-    # 确保保存目录存在
+    """Save each fold's data to the specified directory"""
+    # Ensure the save directory exists
     os.makedirs(save_dir, exist_ok=True)
     
     print(f"Saving fold data to: {save_dir}")
     
-    # 保存训练集和测试集为npy格式
+    # Save training and testing pairs as npy files
     np.save(os.path.join(save_dir, 'train_pairs.npy'), train_pairs)
     np.save(os.path.join(save_dir, 'test_pairs.npy'), test_pairs)
     
-    # 保存训练集和测试集为txt格式
+    # Save training and testing pairs as txt files
     with open(os.path.join(save_dir, 'train_pairs.txt'), 'w') as f:
         for pair, label in train_pairs:
             p1, p2 = pair.split('_')
@@ -514,4 +514,3 @@ if __name__ == "__main__":
     config_path = "./config.yml"  
     result_dir = main(config_path)
     print(f"Training complete! Results saved to: {result_dir}")
-
