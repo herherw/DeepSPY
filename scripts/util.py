@@ -91,7 +91,7 @@ def adapt_scores_to_sequence(scores, sequence_len):
         scores = scores.cpu().numpy()
     scores = np.array(scores)
     
-    if scores.ndim == 1:  # 如果是1D数组
+    if scores.ndim == 1:  
         scores_len = len(scores)
         if scores_len == sequence_len:
             return scores
