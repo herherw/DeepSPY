@@ -11,9 +11,9 @@ require independent experimental validation.
 DeepSPY/
 ├── deepspy/           # Model, data loader, training, prediction, and utilities
 ├── configs/           # Full model and four single-component ablations
-├── data/              # Gold-only dataset, sequences, fixed folds, and examples
+├── data/              # Curated dataset, sequences, fixed folds, and examples
 ├── baselines/         # ML and structure-baseline implementations
-├── results/           # Minimal numerical results supporting the article
+├── results/           # Numerical results supporting the article
 ├── scripts/           # Commands for training, ablations, and baselines
 ├── requirements.txt
 ├── CITATION.cff
