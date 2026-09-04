@@ -25,7 +25,7 @@ and are not stored in GitHub.
 
 ## Dataset
 
-`data/gold_pairs.tsv` contains 267 experimentally curated Gold pairs: 53
+`data/protein_pairs.tsv` contains 267 experimentally curated Gold pairs: 53
 positive and 214 negative pairs. Energy-derived Silver labels are not used.
 `data/splits/fold_assignments.tsv` records the exact five pair-stratified folds;
 each pair appears in an outer test fold once.
