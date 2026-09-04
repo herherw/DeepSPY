@@ -1,0 +1,20 @@
+{
+  "title": "DeepSPY: S-RNase-SLF recognition specificity prediction",
+  "description": "Code, curated Gold-only pair data, fixed fivefold splits, reported predictions, baseline implementations, ablations, and source data for DeepSPY.",
+  "upload_type": "software",
+  "license": "Apache-2.0",
+  "creators": [
+    {
+      "name": "DeepSPY Authors"
+    }
+  ],
+  "keywords": [
+    "S-RNase",
+    "SLF",
+    "self-incompatibility",
+    "protein recognition",
+    "deep learning"
+  ],
+  "access_right": "open"
+}
+

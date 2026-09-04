@@ -1,0 +1,45 @@
+project_root: ..
+
+data:
+  dataset_name: gold_only_267
+  pair_path: data/gold_pairs.tsv
+  pro1_seq_path: data/srnase_sequences.tsv
+  pro1_aac_path: artifacts/features/pro1_aac.npz
+  pro1_dipeptide_path: artifacts/features/pro1_dipeptide.npz
+  pro1_esmc_raw_path: artifacts/features/pro1_esmc_raw.npy
+  pro1_esmc_path: artifacts/features/pro1_esmc_residue.npy
+  pro1_ckesmc_path: artifacts/features/pro1_cksaap_esmc.npy
+  pro2_seq_path: data/slf_sequences.tsv
+  pro2_aac_path: artifacts/features/pro2_aac.npz
+  pro2_dipeptide_path: artifacts/features/pro2_dipeptide.npz
+  pro2_esmc_raw_path: artifacts/features/pro2_esmc_raw.npy
+  pro2_esmc_path: artifacts/features/pro2_esmc_residue.npy
+  pro2_ckesmc_path: artifacts/features/pro2_cksaap_esmc.npy
+
+train:
+  epoch: 100
+  batchsize: 37
+  lr: 0.000005
+  patience: 50
+  contrastive_loss_coef: 0.5
+  interaction_aux_loss_coef: 0.2
+  seed: 124
+  split_seed: 124
+  threshold: 0.47
+
+model:
+  embed_hid_dim: 128
+  embedding_size: 4800
+  dropout: 0.2
+  interaction_gate_init: -2.0
+
+ablation:
+  name: B0_full
+  use_aac_dpc: true
+  use_cksaap_esmc: true
+  use_contrastive_loss: true
+  use_cross_attention: true
+
+output:
+  draw_curves: true
+  model_save_dir: outputs/training

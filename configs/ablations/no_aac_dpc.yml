@@ -1,0 +1,7 @@
+extends: ../full_model.yml
+ablation:
+  name: A1_no_aac_dpc
+  use_aac_dpc: false
+  use_cksaap_esmc: true
+  use_contrastive_loss: true
+  use_cross_attention: true

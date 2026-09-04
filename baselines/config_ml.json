@@ -1,0 +1,30 @@
+{
+  "data": {
+    "pairs_tsv": "data/gold_pairs.tsv",
+    "fold_assignments_tsv": "data/splits/fold_assignments.tsv",
+    "pro1_sequence_tsv": "data/srnase_sequences.tsv",
+    "pro2_sequence_tsv": "data/slf_sequences.tsv",
+    "pro1_esmc_npy": "artifacts/features/pro1_esmc_raw.npy",
+    "pro2_esmc_npy": "artifacts/features/pro2_esmc_raw.npy"
+  },
+  "experiment": {
+    "split_mode": "existing_folds",
+    "outer_folds": 5,
+    "random_seed": 124,
+    "output_dir": "outputs/baselines/ml",
+    "save_models": false,
+    "make_plots": true
+  },
+  "feature_sets": ["aac_dpc_esmc_mean"],
+  "models": ["logistic_regression", "linear_svm", "random_forest"],
+  "fixed_parameters": {
+    "logistic_regression": {"C": 1.0},
+    "linear_svm": {"C": 1.0},
+    "random_forest": {
+      "n_estimators": 300,
+      "max_depth": null,
+      "min_samples_leaf": 1,
+      "max_features": "sqrt"
+    }
+  }
+}
