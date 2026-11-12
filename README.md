@@ -2,8 +2,6 @@
 
 DeepSPY predicts S-RNase–SLF recognition specificity from protein sequences and prioritizes candidate residues for experimental follow-up. This repository contains the software, curated pair identifiers, fixed five-fold splits and configuration files. Trained checkpoints, feature caches, numerical source data and molecular-simulation outputs are provided separately in the companion [Zenodo data archive](https://zenodo.org/) (the record DOI is pending publication; the link will be updated to the specific record).
 
-![1794406224635](image/README/1794406224635.jpg)
-
 ## Repository and data layout
 
 - `deepspy/`: model, feature preparation, training and prediction code.
