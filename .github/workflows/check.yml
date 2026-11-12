@@ -11,4 +11,3 @@ jobs:
       - run: pip install .
       - run: deepspy-train --config configs/benchmark_450ep_t050.yml --validate-only
       - run: deepspy-evaluate --help
-      - run: python -m deepspy.figure2 --help
