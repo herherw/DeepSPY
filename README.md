@@ -14,8 +14,7 @@ DeepSPY predicts S-RNase–SLF recognition specificity from protein sequences an
 
 ## Quick start
 
-The steps below run the released `PhS3_PhS9-SLF1` example. The GitHub repository supplies the code; the companion Zenodo deposit supplies the pretrained checkpoint and cached features. You do not need to train a model to run this example.
-
+The steps below run the released `PhS3_PhS9-SLF1` example. The GitHub repository supplies the code; the companion Zenodo deposit supplies the pretrained checkpoint and cached features. 
 ### 1. Get the code
 
 Clone the [DeepSPY GitHub repository](https://github.com/herherw/DeepSPY) and enter its root directory:
