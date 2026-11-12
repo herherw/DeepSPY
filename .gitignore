@@ -14,3 +14,6 @@ artifacts/
 *.pkl
 *.pt
 *.pth
+
+# Extracted paper results are archived in the companion Zenodo deposit.
+/results/

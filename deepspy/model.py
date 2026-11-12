@@ -36,22 +36,22 @@ class AttentionModule(nn.Module):
 
         batch_size, seq_len, esmc_dim = x.size()
         
-        # Compute self-attention
+        # 计算自注意力
         q = self.query(x) 
         k = self.key(x)   
         v = self.value(x)  
         
-        # Compute attention scores
+        # 计算注意力分数
         scores = torch.matmul(q, k.transpose(-2, -1)) / (esmc_dim ** 0.5)  
 
-        # Apply the mask
+        # 应用掩码
         if mask is not None:
             scores = scores.masked_fill(mask, -1e9)
         
         attn = F.softmax(scores, dim=-1)
         attn = self.dropout(attn)
         
-        # Compute weighted features
+        # 计算加权特征
         context = torch.matmul(attn, v)  
         return context, attn
 
@@ -72,14 +72,14 @@ class CrossAttention(nn.Module):
         v = self.value(x2)  
         
         scores = torch.matmul(q, k.transpose(-2, -1)) / (esmc_dim ** 0.5)  
-        # Mask partner padding before the softmax normalization.
+        # 屏蔽partner序列的padding，避免padding进入softmax分母。
         if key_mask is not None:
             scores = scores.masked_fill(
                 ~key_mask[:, None, :], torch.finfo(scores.dtype).min
             )
         
         attn = F.softmax(scores, dim=-1)
-        # Padded query rows must not produce context vectors or residue scores.
+        # padded query行不应产生context或残基分数。
         if query_mask is not None:
             attn = attn * query_mask[:, :, None].to(attn.dtype)
         if key_mask is not None:
@@ -91,51 +91,43 @@ class CrossAttention(nn.Module):
         return context, attn
         
 class Model(nn.Module):
-    def __init__(self, embed_hid_dim=128, dropout=0.2,
-                 interaction_gate_init=-2.0, use_aac_dpc=True,
-                 use_cksaap_esmc=True, use_contrastive_loss=True,
-                 use_cross_attention=True):
+    def __init__(self, embed_hid_dim=128, dropout=0.2, interaction_gate_init=-2.0,
+                 use_aac_dpc=True, use_cksaap_esmc=True,
+                 use_contrastive_loss=True, use_cross_attention=True):
         super(Model, self).__init__()
         self.drop = dropout  
         self.ckesmc_size = 5760  
         self.esmc_dim = 1152        
         self.dropout = dropout
         self.embed_hid_dim = embed_hid_dim
-        self.use_aac_dpc = bool(use_aac_dpc)
-        self.use_cksaap_esmc = bool(use_cksaap_esmc)
-        self.use_contrastive_loss = bool(use_contrastive_loss)
-        self.use_cross_attention = bool(use_cross_attention)
-        if not self.use_aac_dpc and not self.use_cksaap_esmc:
-            raise ValueError(
-                "At least one global branch (AAC-DPC or CKSAAP-ESMC) "
-                "must remain enabled"
-            )
 
-        # Legacy-style structural ablation: an inactive branch is not
-        # instantiated.  With both branches enabled, B0 follows the unchanged
-        # full-model path.  With one branch enabled, its native 128-D output is
-        # used directly, matching the 20260109 ablation implementation logic.
-        if self.use_cksaap_esmc:
+        self.use_aac_dpc = use_aac_dpc
+        self.use_cksaap_esmc = use_cksaap_esmc
+        self.use_contrastive_loss = use_contrastive_loss
+        self.use_cross_attention = use_cross_attention
+        if not (use_aac_dpc or use_cksaap_esmc):
+            raise ValueError("At least one global sequence encoder is required")
+        if use_cksaap_esmc:
             self.esmc_conv = Convs(self.ckesmc_size)
-        if self.use_aac_dpc:
-            self.fc_ad = torch.nn.Linear(420, 128)
-        if self.use_aac_dpc and self.use_cksaap_esmc:
-            self.rep = torch.nn.Linear(256, 128)
+        if use_aac_dpc:
+            self.fc_ad = torch.nn.Linear(420, 128) 
+        if use_aac_dpc and use_cksaap_esmc:
+            self.rep = torch.nn.Linear(256, 128)    
         self.Prelu = nn.PReLU()
-        if self.use_cross_attention:
+        if use_cross_attention:
             self.cross_attention = CrossAttention(self.esmc_dim, dropout)
-            # Cross-attention contributes through the interaction branch; the sequence encoder is unchanged.
+            # 仅新增cross-attention分类融合；原有序列编码器保持不变。
             self.cross_context1 = nn.Linear(self.esmc_dim, embed_hid_dim)
             self.cross_context2 = nn.Linear(self.esmc_dim, embed_hid_dim)
 
-        # Separate the global decision from the gated cross-attention increment.
+        # 显式分离global决策与cross-attention interaction增量。
         self.global_clf = nn.Sequential(
             nn.Linear(embed_hid_dim * 2, embed_hid_dim),
             nn.ReLU(),
             nn.Dropout(self.drop),
             nn.Linear(embed_hid_dim, 1)
         )
-        if self.use_cross_attention:
+        if use_cross_attention:
             self.interaction_clf = nn.Sequential(
                 nn.Linear(embed_hid_dim * 2, embed_hid_dim),
                 nn.ReLU(),
@@ -146,23 +138,24 @@ class Model(nn.Module):
                 torch.tensor(float(interaction_gate_init))
             )
       
-        if self.use_contrastive_loss:
+        if use_contrastive_loss:
             self.projector = nn.Sequential(
-                nn.Linear(embed_hid_dim, embed_hid_dim),
-                nn.BatchNorm1d(embed_hid_dim),
-                nn.ReLU(),
+                nn.Linear(embed_hid_dim, embed_hid_dim), 
+                nn.BatchNorm1d(embed_hid_dim), 
+                nn.ReLU(), 
                 nn.Linear(embed_hid_dim, embed_hid_dim)
             )
         self.dropout_layer = nn.Dropout(self.drop)
 
     def _process_single_protein(self, ckesmc, aac, dipeptide):
-        if self.use_cksaap_esmc and not self.use_aac_dpc:
+        if not self.use_aac_dpc:
             return self.esmc_conv(ckesmc)
+        if not self.use_cksaap_esmc:
+            return self.Prelu(self.fc_ad(torch.cat([aac, dipeptide], dim=1)))
+        esm_rep = self.esmc_conv(ckesmc)
         ad = torch.cat([aac, dipeptide], dim=1)
         ad_pro = self.Prelu(self.fc_ad(ad))
-        if self.use_aac_dpc and not self.use_cksaap_esmc:
-            return ad_pro
-        esm_rep = self.esmc_conv(ckesmc)
+        
         seq_rep = torch.cat([esm_rep, ad_pro], dim=1)
         return self.Prelu(self.rep(seq_rep))
     
@@ -224,14 +217,11 @@ class Model(nn.Module):
         seq1_embed = self._process_single_protein(ckesmc1, aac1, dipeptide1)
         seq2_embed = self._process_single_protein(ckesmc2, aac2, dipeptide2)
         
+        seq1_proj = seq2_proj = dist = None
         if self.use_contrastive_loss:
             seq1_proj = self.projector(seq1_embed)
             seq2_proj = self.projector(seq2_embed)
             dist = F.cosine_similarity(seq1_proj, seq2_proj, dim=-1)
-        else:
-            seq1_proj = None
-            seq2_proj = None
-            dist = None
         
         attention_weights = {}
         residue_scores = [None, None]
@@ -252,7 +242,7 @@ class Model(nn.Module):
             valid1 = self._valid_mask(esmc_lengths1, esmc1.size(1), esmc1.device)
             valid2 = self._valid_mask(esmc_lengths2, esmc2.size(1), esmc2.device)
 
-            # Apply the shared cross-attention module bidirectionally so each protein receives partner context.
+            # 同一cross-attention模块双向调用，使两个蛋白均获得partner context。
             context12, cross_attn = self.cross_attention(
                 esmc1, esmc2, valid1, valid2
             )
@@ -287,15 +277,10 @@ class Model(nn.Module):
             [interaction_embed1, interaction_embed2], dim=1
         )
         global_raw_logit = self.global_clf(global_features)
+        interaction_raw_logit = interaction_gate = None
         if self.use_cross_attention:
             interaction_raw_logit = self.interaction_clf(interaction_features)
             interaction_gate = torch.sigmoid(self.interaction_gate_logit)
-        else:
-            interaction_raw_logit = torch.zeros_like(global_raw_logit)
-            interaction_gate = torch.zeros(
-                (), device=global_raw_logit.device,
-                dtype=global_raw_logit.dtype
-            )
         if disable_cross_attention or not self.use_cross_attention:
             raw_logit = global_raw_logit
         else:
@@ -303,12 +288,11 @@ class Model(nn.Module):
                 global_raw_logit + interaction_gate * interaction_raw_logit
             )
         logits = torch.sigmoid(raw_logit)
+        fusion_features = global_features
         if self.use_cross_attention:
             fusion_features = torch.cat(
                 [global_features, interaction_gate * interaction_features], dim=1
             )
-        else:
-            fusion_features = global_features
         fusion_vector = fusion_features.detach().cpu().numpy()
         
         return {
@@ -325,36 +309,20 @@ class Model(nn.Module):
             'attention_weights': attention_weights,
             'fusion_vector': fusion_vector  
         }
-def sup_contrasitive_loss(feature1, feature2, labels, temperature=1):
-    if temperature <= 0:
-        raise ValueError(f"temperature must be positive, got {temperature}")
-
-    sim_matrix = torch.nn.functional.cosine_similarity(
-        feature1.unsqueeze(1), feature2.unsqueeze(0), dim=2
-    )
-    positive_mask = torch.diag(labels.float())
-    positive_count = positive_mask.sum()
-
-    # A shuffled imbalanced batch can contain no positive pairs.  Dividing by
-    # p=0 corrupted the model with NaN parameters.  Such a batch contains no
-    # supervised positive contrastive signal, so its contrastive contribution
-    # is a differentiable zero; the main and interaction BCE terms still train
-    # on every sample in the batch.
-    if positive_count.detach().item() == 0:
-        return sim_matrix.sum() * 0.0
-
-    positive_sim = sim_matrix * positive_mask
-    positive = positive_sim.sum(1)
-
-    negative_mask = torch.ones_like(sim_matrix) - positive_mask
-    negative_mask = negative_mask * (sim_matrix < 0.7)
-
-    negative_sim = sim_matrix * negative_mask
-    # Equivalent to log(sum(exp(...))) for finite inputs, but numerically stable.
-    log_denominator = torch.logsumexp(
-        (negative_sim / temperature).reshape(-1), dim=0
-    )
-    loss = -(
-        positive / temperature - log_denominator
-    ) / positive_count
-    return loss.mean()
+def pairwise_contrastive_loss(feature1, feature2, labels, margin=0.2,
+                              positive_weight=1.0, negative_weight=1.0):
+    """Use only experimentally labeled pairs; unknown cross-pairs are not negatives."""
+    if not -1.0 <= margin <= 1.0:
+        raise ValueError("contrastive margin must be within [-1, 1]")
+    if positive_weight < 0 or negative_weight < 0:
+        raise ValueError("contrastive class weights must be nonnegative")
+    if feature1.shape != feature2.shape or feature1.shape[0] != labels.numel():
+        raise ValueError("Projection and label batch sizes differ")
+    similarity = (F.normalize(feature1, dim=-1) *
+                  F.normalize(feature2, dim=-1)).sum(dim=-1)
+    positive = labels.reshape(-1) == 1
+    negative = ~positive
+    zero = similarity.sum() * 0.0
+    positive_loss = (1.0 - similarity[positive]).mean() if positive.any() else zero
+    negative_loss = F.relu(similarity[negative] - margin).square().mean() if negative.any() else zero
+    return positive_weight * positive_loss + negative_weight * negative_loss

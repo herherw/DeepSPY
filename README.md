@@ -1,140 +1,77 @@
 # DeepSPY
 
-DeepSPY predicts S-RNase–SLF recognition specificity from protein sequences and
-prioritizes candidate specificity residues. It is intended as a screening and
-hypothesis-generation tool: predicted interactions and high-attention residues
-require independent experimental validation.
+DeepSPY predicts S-RNase–SLF recognition specificity from protein sequences and prioritizes candidate residues for experimental follow-up. This repository contains the software, curated pair identifiers, fixed five-fold splits and configuration files. Trained checkpoints, feature caches, numerical source data and molecular-simulation outputs are provided separately in the companion [Zenodo data archive](https://zenodo.org/) (the record DOI is pending publication; the link will be updated to the specific record).
 
-## Repository structure
+![1794406224635](image/README/1794406224635.jpg)
 
-```text
-DeepSPY/
-├── deepspy/           # Model, data loader, training, prediction, and utilities
-├── configs/           # Full model and four single-component ablations
-├── data/              # Curated dataset, sequences, fixed folds, and examples
-├── baselines/         # ML and structure-baseline implementations
-├── results/           # Numerical results supporting the article
-├── scripts/           # Commands for training, ablations, and baselines
-├── requirements.txt
-├── CITATION.cff
-└── LICENSE
-```
+## Repository and data layout
 
-Large checkpoints and precomputed features are deposited separately on Zenodo
-and are not stored in GitHub.
+- `deepspy/`: model, feature preparation, training and prediction code.
+- `configs/`: experiment settings, including the fixed benchmark and performance protocols.
+- `data/`: curated pair and sequence tables plus the ordered fold assignments.
+- `baselines/`: classical machine-learning baseline implementation and configuration.
+- `docs/artifact_rights.md`: redistribution considerations for non-code artifacts.
 
-## Dataset
+## Quick start
 
-`data/protein_pairs.tsv` contains 267 experimentally curated Gold pairs: 53
-positive and 214 negative pairs. Energy-derived Silver labels are not used.
-`data/splits/fold_assignments.tsv` records the exact five pair-stratified folds;
-each pair appears in an outer test fold once.
+The steps below run the released `PhS3_PhS9-SLF1` example. The GitHub repository supplies the code; the companion Zenodo deposit supplies the pretrained checkpoint and cached features. You do not need to train a model to run this example.
 
-## Installation
+### 1. Get the code
 
-Python 3.12 and a CUDA-capable GPU are recommended.
+Clone the [DeepSPY GitHub repository](https://github.com/herherw/DeepSPY) and enter its root directory:
 
 ```bash
-git clone https://github.com/OWNER/DeepSPY.git
+git clone https://github.com/herherw/DeepSPY.git
 cd DeepSPY
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
 ```
 
-## Install Zenodo artifacts
+### 2. Install DeepSPY
 
-Download these three files from the associated Zenodo record:
-
-```text
-deepspy_checkpoints_v1.0.0.tar.gz
-deepspy_features_v1.0.0.tar.gz
-deepspy_source_data_v1.0.0.tar.gz  # optional for source-data analyses
-```
-
-Extract them into `artifacts/`:
+Use Python 3.12 to match the reported environment. From the repository root, check the active Python and install this checkout:
 
 ```bash
-mkdir -p artifacts
-tar -xzf /path/to/deepspy_checkpoints_v1.0.0.tar.gz -C artifacts
-tar -xzf /path/to/deepspy_features_v1.0.0.tar.gz -C artifacts
-tar -xzf /path/to/deepspy_source_data_v1.0.0.tar.gz -C artifacts
+python --version
+python -m pip install .
 ```
 
-The resulting paths used by the code are
-`artifacts/checkpoints/fold_1_best_model.pkl` through fold 5 and
-`artifacts/features/`.
+The `python -m pip install .` command installs DeepSPY and its listed dependencies into the active environment.
 
-## Training and ablation experiments
+### 3. Run the example
 
-Run all commands from the repository root.
+From the companion [Zenodo data archive](https://zenodo.org/), download both`inputs_and_features.tar.gz` and `checkpoints_case.tar.gz`. Place the downloaded files in the `DeepSPY` repository root, and run:
 
 ```bash
-# Full fivefold model
-bash scripts/run_cv.sh
-
-# Four ablations: AAC/DPC, CKSAAP-ESMC, contrastive module, and attention module
-bash scripts/run_ablations.sh
+tar -xzf inputs_and_features.tar.gz
+tar -xzf checkpoints_case.tar.gz
 ```
 
-The equivalent full-model command is:
+Extract into the repository root, keeping the paths stored in the archives. After extraction, `data/examples/protein1.fasta`, `data/examples/protein2.fasta`, `artifacts/features/` and `artifacts/checkpoints/case/` should exist.
+
+Run this command from the repository root with the same Python environment used for installation:
 
 ```bash
-python -u -m deepspy.train --config configs/full_model.yml
+python -m deepspy.case --config configs/case.yml --checkpoint artifacts/checkpoints/case/fold_1_epoch_45.pkl --output prediction_results/example
 ```
 
-## Baselines
+The included features are already computed, so this example does not require downloading an upstream ESM-C model. For new protein sequences, install the optional ESM-C dependency with `python -m pip install ".[esmc]"` and follow the upstream model's access and license terms. Cached-feature predictions use the released feature archive instead.
+
+## Train new models
+
+To train DeepSPY again on the curated pairs, first complete Quick start steps 1–2 . The training code needs the pair table, saved five-fold splits and precomputed feature files. From the repository root, check that the pair labels and saved fold assignments are consistent:
 
 ```bash
-bash scripts/run_baselines.sh
+deepspy-train --config configs/benchmark.yml --validate-only
 ```
 
-The machine-learning baselines use AAC/DPC plus mean-pooled ESM-C and the same
-fixed outer folds, without inner cross-validation. Chai-1 and AlphaFold 3 are
-evaluated as zero-shot structural baselines using ipTM and a fixed threshold of
-0.6. AUPRC is reported as average precision (AP).
-
-## Prediction
-
-For a pair included in the released feature dictionaries:
+This check does not load or verify every feature file. Start the full five-fold benchmark training run with:
 
 ```bash
-python -m deepspy.predict \
-  --model_path artifacts/checkpoints/fold_1_best_model.pkl \
-  --protein1 PhS3 \
-  --protein2 PhS9-SLF1 \
-  --details \
-  --out_dir outputs/predictions/PhS3_PhS9-SLF1
+deepspy-train --config configs/benchmark.yml
 ```
 
-Use all five checkpoints to assess fold-wise prediction stability. Novel
-sequences require AAC, DPC, residue-aligned ESM-C, and CKSAAP-ESMC features in
-the same formats used during training.
+Each command trains five models using the saved train/test pair splits. It automatically uses a CUDA GPU if available, otherwise the CPU. Existing runs are not overwritten.
 
-## Reported results retained in GitHub
-
-- `results/oof_predictions.tsv`: all 267 DeepSPY out-of-fold calls.
-- `results/ablations/`: fold-level and mean ± SD ablation metrics.
-- `results/baselines/`: input structure scores and fold-level baseline
-  metrics.
-- `results/residue_prioritization/`: representative candidate residues.
-
-## Interpretation and limitations
-
-Cross-attention enters classification through a learned gated interaction
-logit, but attention scores remain exploratory rankings rather than causal
-effects. The dataset is small and imbalanced, and pair-level splitting allows
-individual proteins to recur across training and test pairs.
-
-The archived paper implementation evaluates the outer test fold after each
-epoch and retains the checkpoint with the highest test-fold MCC. This may
-optimistically bias the reported performance and should be disclosed when the
-legacy results are described. Future confirmatory evaluation should select the
-epoch using training-only information and evaluate an untouched test set once.
 
 ## Citation and license
 
-Before release, replace the placeholder authors and GitHub URL in
-`CITATION.cff` and `.zenodo.json`. An article DOI is not required before the
-article is published. Code is provided under the [Apache License 2.0](LICENSE).
+Use [CITATION.cff](CITATION.cff) for software citation. Once the Zenodo record is published, cite its **data DOI** separately when using the checkpoints or source data. The original software is licensed under [Apache-2.0](LICENSE). Dataset, feature and third-party redistribution rights are discussed in [docs/artifact_rights.md](docs/artifact_rights.md); the software license does not automatically cover those artifacts.

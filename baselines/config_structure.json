@@ -1,7 +1,0 @@
-{
-  "deep_predictions": "results/oof_predictions.tsv",
-  "chai_summary": "results/baselines/chai1_scores.tsv",
-  "alphafold3_summary": "results/baselines/alphafold3_scores.tsv",
-  "iptm_threshold": 0.6,
-  "output_dir": "outputs/baselines/structure"
-}

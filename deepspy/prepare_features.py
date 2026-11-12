@@ -18,11 +18,7 @@ AMINO_ACIDS = "ACDEFGHIKLMNPQRSTVWY"
 AA_TO_INDEX = {amino_acid: index for index, amino_acid in enumerate(AMINO_ACIDS)}
 
 
-def load_config(path):
-    import yaml
-
-    with open(path, "r", encoding="utf-8") as handle:
-        return yaml.safe_load(handle)
+from .utils import load_config
 
 
 def load_sequences(path, id_column, sequence_column):
@@ -152,7 +148,7 @@ def process_side(raw_path, sequence_path, id_column, sequence_column,
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", default="configs/full_model.yml")
+    parser.add_argument("--config", default="configs/benchmark_450ep_t050.yml")
     parser.add_argument(
         "--audit-only", action="store_true",
         help="validate raw ESM-C lengths without writing output caches",

@@ -228,7 +228,7 @@ class ProteinPairPredictor:
             if archived_config is None:
                 archived_config = (
                     Path(__file__).resolve().parents[1]
-                    / "configs" / "full_model.yml"
+                    / "configs" / "benchmark_450ep_t050.yml"
                 )
             config_path = str(archived_config)
         self.config = get_config(config_path)
@@ -930,8 +930,7 @@ def main():
             args.model_path, args.config_path, args.model_source
         )
     except Exception as e:
-        print(f"Failed to initialize predictor: {e}")
-        return
+        raise RuntimeError(f"Failed to initialize predictor: {e}") from e
     
     # List available proteins
     if args.list_proteins:

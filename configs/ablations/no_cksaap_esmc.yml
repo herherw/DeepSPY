@@ -1,7 +1,0 @@
-extends: ../full_model.yml
-ablation:
-  name: A2_no_cksaap_esmc
-  use_aac_dpc: true
-  use_cksaap_esmc: false
-  use_contrastive_loss: true
-  use_cross_attention: true

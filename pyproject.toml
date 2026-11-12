@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deepspy"
+version = "1.0.0"
+description = "S-RNase/SLF recognition specificity prediction"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+dynamic = ["dependencies"]
+
+[project.optional-dependencies]
+esmc = ["esm>=3.1,<4"]
+
+[project.scripts]
+deepspy-train = "deepspy.cli:train_main"
+deepspy-predict = "deepspy.cli:predict_main"
+deepspy-prepare-features = "deepspy.cli:prepare_features_main"
+deepspy-evaluate = "deepspy.evaluate:main"
+
+[tool.setuptools]
+packages = ["deepspy"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}

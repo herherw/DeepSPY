@@ -1,0 +1,39 @@
+project_root: ../..
+
+data:
+  dataset_name: curated_pairs
+  pair_path: data/pairs.tsv
+  pro1_seq_path: data/srnase_sequences.tsv
+  pro1_aac_path: artifacts/features/pro1_aac.npz
+  pro1_dipeptide_path: artifacts/features/pro1_dipeptide.npz
+  pro1_esmc_raw_path: artifacts/features/pro1_esmc_raw.npy
+  pro1_esmc_path: artifacts/features/pro1_esmc_residue.npy
+  pro1_ckesmc_path: artifacts/features/pro1_cksaap_esmc.npy
+  pro2_seq_path: data/slf_sequences.tsv
+  pro2_aac_path: artifacts/features/pro2_aac.npz
+  pro2_dipeptide_path: artifacts/features/pro2_dipeptide.npz
+  pro2_esmc_raw_path: artifacts/features/pro2_esmc_raw.npy
+  pro2_esmc_path: artifacts/features/pro2_esmc_residue.npy
+  pro2_ckesmc_path: artifacts/features/pro2_cksaap_esmc.npy
+
+train:
+  epoch: 450
+  batchsize: 37
+  lr: 5.0e-06
+  contrastive_loss_coef: 0.5
+  contrastive_margin: 0.2
+  contrastive_positive_weight: 1.0
+  contrastive_negative_weight: 1.0
+  interaction_aux_loss_coef: 0.2
+  seed: 124
+  threshold_candidates: [0.5]
+  threshold: 0.5
+  export_fixed_attention: false
+model:
+  embed_hid_dim: 128
+  embedding_size: 4800
+  dropout: 0.2
+ablation:
+  use_aac_dpc: false
+output:
+  model_save_dir: outputs/ablations/A1_no_aac_dpc

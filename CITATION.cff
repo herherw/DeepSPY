@@ -1,14 +1,13 @@
 cff-version: 1.2.0
 message: "If you use DeepSPY, please cite the associated article and this software release."
-title: "DeepSPY: S-RNase-SLF recognition specificity prediction"
+title: "DeepSPY: S-RNase/SLF recognition specificity prediction"
 type: software
 version: 1.0.0
-date-released: 2026-09-03
 authors:
-  - family-names: "Authors"
-    given-names: "DeepSPY"
+  - family-names: "Wu"
+    given-names: "He"
 license: Apache-2.0
-repository-code: "https://github.com/OWNER/DeepSPY"
+repository-code: "https://github.com/herherw/DeepSPY"
 keywords:
   - S-RNase
   - SLF

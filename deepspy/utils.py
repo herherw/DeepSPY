@@ -52,7 +52,7 @@ def get_config(config_path: Optional[str] = None) -> Dict:
     """Get configuration with command line parameter override support"""
     if config_path is None:
         config_path = str(
-            Path(__file__).resolve().parents[1] / 'configs' / 'full_model.yml'
+            Path(__file__).resolve().parents[1] / 'configs' / 'benchmark_450ep_t050.yml'
         )
     
     return load_config(config_path)
